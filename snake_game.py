@@ -7,12 +7,17 @@ pygame.init()
 display_width = 800
 display_height = 600
 
+pause = False
+
 gameDisplay = pygame.display.set_mode((display_width, display_height))
 pygame.display.set_caption("Snake!!")
 
 black = (0,0,0)
 white = (255,255,255)
-red = (255,0,0)
+red = (247, 147, 131)
+green = (131, 242, 142)
+bright_green = (0,255,0)
+bright_red = (255,0,0)
 
 clock = pygame.time.Clock()
 applImg = pygame.image.load('/home/isaac/Documents/Python_Projects/Snake_Game/apple.jpg')
@@ -38,6 +43,10 @@ def apples(prevApple, snake_ids, score):
 
     return score
 
+def quitgame():
+    pygame.quit()
+    quit()
+
 def text_objects(text, font):
     textSurface = font.render(text, True, black)
     return textSurface, textSurface.get_rect()
@@ -52,11 +61,77 @@ def message_display(text):
 
     time.sleep(2)
 
-    game_loop()
+    game_intro()
 
 
 def crash():
     message_display('You Died!')
+
+def button(msg,x,y,w,h,ic,ac,action=None):
+    mouse = pygame.mouse.get_pos()
+    click = pygame.mouse.get_pressed()
+
+    buttonText = pygame.font.Font('freesansbold.ttf', 75)
+    if x + w > mouse[0] > x and y + h > mouse[1] > y:
+        pygame.draw.rect(gameDisplay, ac, (x, y, w, h))
+        if click[0] == 1 and action != None:
+            action()
+    else:
+        pygame.draw.rect(gameDisplay, ic, (x, y, w, h))
+
+    textSurf, textRect = text_objects(msg, buttonText)
+    textRect.center = ((x+(w/2)), (y+(h/2)))
+
+    gameDisplay.blit(textSurf, textRect)
+
+def game_intro():
+
+    intro = True
+
+    while intro:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+        gameDisplay.fill(white)
+        largeText = pygame.font.Font('freesansbold.ttf', 115)
+        TextSurf, TextRect = text_objects("Snake!!", largeText)
+        TextRect.center = ((display_width/2), 200)
+        gameDisplay.blit(TextSurf, TextRect)
+        
+        button("Start", 0, 400, 400, 200, green, bright_green, game_loop)
+        button("Close", 400, 400, 400, 200, red, bright_red, quitgame)
+
+        pygame.display.update()
+        clock.tick(15)
+
+def unpause():
+    global pause
+
+    pause = False
+
+
+
+def paused():
+    global pause
+
+    while pause:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+        gameDisplay.fill(white)
+        largeText = pygame.font.Font('freesansbold.ttf', 115)
+        TextSurf, TextRect = text_objects("Snake!!", largeText)
+        TextRect.center = ((display_width/2), 200)
+        gameDisplay.blit(TextSurf, TextRect)
+        
+        button("Continue", 0, 400, 400, 200, green, bright_green, unpause)
+        button("Close", 400, 400, 400, 200, red, bright_red, quitgame)
+
+        pygame.display.update()
+        clock.tick(15)
+        
 
 def score_count(score):
     font = pygame.font.SysFont(None, 25)
@@ -107,6 +182,8 @@ def snake_movement(snake_direction, snake_ids, count):
 
 def game_loop():
 
+    global pause
+
     snake_ids = [[400,300], [380, 300], [360, 300], [340, 300]]
     snake_direction = "right"
     snake_movement_count = 0
@@ -129,11 +206,12 @@ def game_loop():
                     snake_direction = 'up'
                 if event.key == pygame.K_DOWN:
                     snake_direction = 'down'
+                if event.key == pygame.K_p:
+                    pause = True
+                    paused()
 
 
         gameDisplay.fill(white)
-        # start movement
-        # spawn the snake
         snake_movement_count += 1
         
         snake_movement(snake_direction, snake_ids, snake_movement_count)
@@ -144,7 +222,7 @@ def game_loop():
         pygame.display.update()
         clock.tick(30)
 
-
+game_intro()
 game_loop()
 pygame.quit()
 quit()
