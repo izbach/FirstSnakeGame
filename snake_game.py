@@ -1,6 +1,7 @@
 import pygame
 import random
 import time
+from random import choice
 
 pygame.init()
 
@@ -20,28 +21,44 @@ bright_green = (0,255,0)
 bright_red = (255,0,0)
 
 clock = pygame.time.Clock()
-applImg = pygame.image.load('/home/isaac/Documents/Python_Projects/Snake_Game/apple.jpg')
+
+def find_x_and_y(snake_ids):
+    rangeX = int(display_width/20 -1)
+    rangeY = int(display_height/20 -1)
+    non_usable_xs = []
+    non_usable_ys = []
+    for snake in snake_ids:
+        non_usable_xs.append(snake[0]/20)
+        non_usable_ys.append(snake[1]/20)
+    xVal = choice([i for i in range(0, rangeX) if i not in non_usable_xs]) * 20
+    yVal = choice([i for i in range(0, rangeY) if i not in non_usable_ys]) * 20
+
+    return xVal, yVal
+def draw_apple(xVal, yVal):
+    pygame.draw.rect(gameDisplay, bright_red, [xVal, yVal, 20, 20])
 def apples(prevApple, snake_ids, score):
     if prevApple == []:
-        xVal = random.randrange(0, display_width/20 - 1) * 20
-        yVal = random.randrange(0, display_height/20 - 1) * 20
+        xVal, yVal = find_x_and_y(snake_ids)
         prevApple.append(xVal)
         prevApple.append(yVal)
-        gameDisplay.blit(applImg, (xVal,yVal))
+        draw_apple(xVal, yVal)
+
     elif prevApple[0] == snake_ids[0][0] and prevApple[1] == snake_ids[0][1]:
-        xVal = random.randrange(0, display_width/20 - 1) * 20
-        yVal = random.randrange(0, display_height/20 - 1) * 20
+
+        xVal, yVal = find_x_and_y(snake_ids)
         prevApple.clear()
         prevApple.append(xVal)
         prevApple.append(yVal)
-        gameDisplay.blit(applImg, (xVal,yVal))
+        draw_apple(xVal, yVal)
         snake_ids.append([snake_ids[-1][0], snake_ids[-1][1]])
         score += 1
 
     else:    
-        gameDisplay.blit(applImg, (prevApple[0], prevApple[1]))
+        draw_apple(prevApple[0], prevApple[1])
+
 
     return score
+
 
 def quitgame():
     pygame.quit()
