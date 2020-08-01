@@ -7,8 +7,8 @@ pygame.init()
 
 display_width = 800
 display_height = 600
-
-pause = False
+grid_unit_size = 20
+PAUSE = False
 
 gameDisplay = pygame.display.set_mode((display_width, display_height))
 pygame.display.set_caption("Snake!!")
@@ -23,19 +23,19 @@ bright_red = (255,0,0)
 clock = pygame.time.Clock()
 
 def find_x_and_y(snake_ids):
-    rangeX = int(display_width/20 -1)
-    rangeY = int(display_height/20 -1)
+    rangeX = int(display_width/grid_unit_size -1)
+    rangeY = int(display_height/grid_unit_size -1)
     non_usable_xs = []
     non_usable_ys = []
     for snake in snake_ids:
-        non_usable_xs.append(snake[0]/20)
-        non_usable_ys.append(snake[1]/20)
-    xVal = choice([i for i in range(0, rangeX) if i not in non_usable_xs]) * 20
-    yVal = choice([i for i in range(0, rangeY) if i not in non_usable_ys]) * 20
+        non_usable_xs.append(snake[0]/grid_unit_size)
+        non_usable_ys.append(snake[1]/grid_unit_size)
+    xVal = choice([i for i in range(0, rangeX) if i not in non_usable_xs]) * grid_unit_size
+    yVal = choice([i for i in range(0, rangeY) if i not in non_usable_ys]) * grid_unit_size
 
     return xVal, yVal
 def draw_apple(xVal, yVal):
-    pygame.draw.rect(gameDisplay, bright_red, [xVal, yVal, 20, 20])
+    pygame.draw.rect(gameDisplay, bright_red, [xVal, yVal, grid_unit_size, grid_unit_size])
 def apples(prevApple, snake_ids, score):
     if prevApple == []:
         xVal, yVal = find_x_and_y(snake_ids)
@@ -82,7 +82,9 @@ def message_display(text):
 
 
 def crash():
+    
     message_display('You Died!')
+    
 
 def button(msg,x,y,w,h,ic,ac,action=None):
     mouse = pygame.mouse.get_pos()
@@ -123,16 +125,16 @@ def game_intro():
         clock.tick(15)
 
 def unpause():
-    global pause
+    global PAUSE
 
-    pause = False
+    PAUSE = False
 
 
 
 def paused():
-    global pause
+    global PAUSE
 
-    while pause:
+    while PAUSE:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -156,50 +158,51 @@ def score_count(score):
     gameDisplay.blit(text, (0,0))
 
 
-def snake_movement(snake_direction, snake_ids, count):
-    size = 20
+def snake_movement(snake_direction, snake_ids, count, deathFunc=crash):
+
     lead_position_x = snake_ids[0][0]
     lead_position_y = snake_ids[0][1]
     if snake_direction == 'right' and count == 3:
-        snake_ids[0][0] += size
+        snake_ids[0][0] += grid_unit_size
     elif snake_direction == 'left' and count == 3:
-        snake_ids[0][0] -= size
+        snake_ids[0][0] -= grid_unit_size
     elif snake_direction == 'up' and count == 3:
-        snake_ids[0][1] -= size
+        snake_ids[0][1] -= grid_unit_size
     elif snake_direction == 'down' and count == 3:
-        snake_ids[0][1] += size
+        snake_ids[0][1] += grid_unit_size
 
     
-    if snake_ids[0][0] < 0 or snake_ids[0][0] + size > display_width:
-        crash()
-    elif snake_ids[0][1] < 0 or snake_ids[0][1] + size > display_height:
-        crash()
-    
-    pygame.draw.rect(gameDisplay, black, [snake_ids[0][0], snake_ids[0][1], size, size])
+    if snake_ids[0][0] < 0 or snake_ids[0][0] + grid_unit_size > display_width:
+        return deathFunc()
+    elif snake_ids[0][1] < 0 or snake_ids[0][1] + grid_unit_size > display_height:
+        return deathFunc()
+
+    pygame.draw.rect(gameDisplay, black, [snake_ids[0][0], snake_ids[0][1], grid_unit_size, grid_unit_size])
     if count == 3:
         for snake in snake_ids[1:]:
             if snake == snake_ids[0]:
-                crash()
+                return deathFunc()
             else:
                 prev_position_x = snake[0]
                 prev_position_y = snake[1]
                 
                 snake[0] = lead_position_x
                 snake[1] = lead_position_y
-                pygame.draw.rect(gameDisplay, black, [snake[0], snake[1], size, size])
+                pygame.draw.rect(gameDisplay, black, [snake[0], snake[1], grid_unit_size, grid_unit_size])
                 lead_position_x = prev_position_x
                 lead_position_y = prev_position_y
     else:
         for snake in snake_ids[1:]:
-            pygame.draw.rect(gameDisplay, black, [snake[0], snake[1], size, size])
+            pygame.draw.rect(gameDisplay, black, [snake[0], snake[1], grid_unit_size, grid_unit_size])
 
-                
-    
+
+
+
 
 
 def game_loop():
 
-    global pause
+    global PAUSE
 
     snake_ids = [[400,300], [380, 300], [360, 300], [340, 300]]
     snake_direction = "right"
@@ -224,14 +227,14 @@ def game_loop():
                 if event.key == pygame.K_DOWN:
                     snake_direction = 'down'
                 if event.key == pygame.K_p:
-                    pause = True
+                    PAUSE = True
                     paused()
 
 
         gameDisplay.fill(white)
         snake_movement_count += 1
         
-        snake_movement(snake_direction, snake_ids, snake_movement_count)
+        snake_movement(snake_direction, snake_ids, snake_movement_count, crash)
         score = apples(prevApple, snake_ids, score)
         score_count(score)
         if snake_movement_count == 3:
